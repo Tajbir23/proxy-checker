@@ -21,15 +21,28 @@ app.get('/ping', (req, res) => {
     res.send('pong')
 })
 
+function getFastProxyCount() {
+    const fastProxiesPath = path.join(__dirname, 'public', 'fast_proxies.txt');
+    if (fs.existsSync(fastProxiesPath)) {
+        const content = fs.readFileSync(fastProxiesPath, 'utf-8').trim();
+        if (!content) return 0;
+        return content.split('\n').filter(Boolean).length;
+    }
+    return 0;
+}
+
 app.get('/', (req, res) => {
     const fastProxiesPath = path.join(__dirname, 'public', 'fast_proxies.txt');
     const fastProxiesExists = fs.existsSync(fastProxiesPath);
-    res.render('index', {results: null, fastProxiesExists})
+    const fastProxyCount = getFastProxyCount();
+    res.render('index', {results: null, fastProxiesExists, fastProxyCount, totalProxyCount: 0, latencyLimit: 1000})
 })
 
 app.post('/check', upload.single('proxyFile'), async(req, res) => {
     let proxyList = []
     let errorMsg = null;
+    let latencyLimit = parseInt(req.body.latencyLimit);
+    if (isNaN(latencyLimit) || latencyLimit < 1) latencyLimit = 1000;
 
     if (req.body.proxyText) {
         proxyList = req.body.proxyText.split('\n').map(p => p.trim()).filter(p => p);
@@ -48,7 +61,8 @@ app.post('/check', upload.single('proxyFile'), async(req, res) => {
     if (errorMsg) {
         const fastProxiesPath = path.join(__dirname, 'public', 'fast_proxies.txt');
         const fastProxiesExists = fs.existsSync(fastProxiesPath);
-        return res.render('index', { results: null, error: errorMsg, fastProxiesExists });
+        const fastProxyCount = getFastProxyCount();
+        return res.render('index', { results: null, error: errorMsg, fastProxiesExists, fastProxyCount, totalProxyCount: 0, latencyLimit });
     }
 
     const results = []
@@ -57,7 +71,7 @@ app.post('/check', upload.single('proxyFile'), async(req, res) => {
     for (const proxy of proxyList) {
         const result = await checkProxy(proxy);
         results.push({ proxy, ...result });
-        if (result.status === 'success' && result.latency <= 1000) {
+        if (result.status === 'success' && result.latency <= latencyLimit) {
           fastProxies.push(proxy);
         }
     }
@@ -66,7 +80,9 @@ app.post('/check', upload.single('proxyFile'), async(req, res) => {
   const filePath = path.join(__dirname, 'public', 'fast_proxies.txt');
   fs.writeFileSync(filePath, fastProxies.join('\n'), 'utf-8');
   const fastProxiesExists = fastProxies.length > 0;
-  res.render('index', { results, error: null, fastProxiesExists });
+  const fastProxyCount = fastProxies.length;
+  const totalProxyCount = proxyList.length;
+  res.render('index', { results, error: null, fastProxiesExists, fastProxyCount, totalProxyCount, latencyLimit });
 })
 
 app.post('/clear-fast-proxies', (req, res) => {
@@ -75,7 +91,7 @@ app.post('/clear-fast-proxies', (req, res) => {
         fs.unlinkSync(fastProxiesPath);
         console.log('fast_proxies.txt deleted');
     }
-    res.redirect('/');
+    res.render('index', { results: null, fastProxiesExists: false, fastProxyCount: 0, totalProxyCount: 0 });
 });
 
 app.listen(PORT, () => {

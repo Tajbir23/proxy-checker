@@ -106,6 +106,10 @@
 <body>
   <div class="container">
     <h1>Proxy Checker Tool</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div style="background:#e0f2fe;color:#0369a1;padding:8px 16px;border-radius:6px;font-weight:500;">Fast Proxies: <span id="fastProxyCount"><%= fastProxyCount %></span></div>
+      <div style="background:#fef9c3;color:#b45309;padding:8px 16px;border-radius:6px;font-weight:500;">Total Proxies: <span id="totalProxyCount"><%= totalProxyCount %></span></div>
+    </div>
     <% if (typeof error !== 'undefined' && error) { %>
       <div class="error"><%= error %></div>
       <script>console.log('Error: <%= JSON.stringify(error) %>');</script>
@@ -115,6 +119,8 @@
       <textarea id="proxyText" name="proxyText" placeholder="ip:port:user:pass\nor\nip:port"></textarea><br>
       <label for="proxyFile">OR Upload .txt file:</label><br>
       <input id="proxyFile" type="file" name="proxyFile" accept=".txt"><br>
+      <label for="latencyLimit">Fast Proxy Latency (ms):</label><br>
+      <input id="latencyLimit" name="latencyLimit" type="number" min="1" max="10000" value="<%= latencyLimit %>" style="width:100%;margin-bottom:16px;padding:8px;border-radius:6px;border:1px solid #cfd8dc;font-size:1rem;">
       <button type="submit">Check Proxy</button>
     </form>
     <button id="clearDataBtn" type="button" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:10px 24px;font-size:1rem;cursor:pointer;margin:16px 0 0 0;width:100%;transition:background 0.2s;">Data Clear</button>
