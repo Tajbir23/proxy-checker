@@ -65,6 +65,15 @@ app.post('/check', upload.single('proxyFile'), async(req, res) => {
   res.render('index', { results, error: null });
 })
 
+app.post('/clear-fast-proxies', (req, res) => {
+    const fastProxiesPath = path.join(__dirname, 'public', 'fast_proxies.txt');
+    if (fs.existsSync(fastProxiesPath)) {
+        fs.unlinkSync(fastProxiesPath);
+        console.log('fast_proxies.txt deleted');
+    }
+    res.redirect('/');
+});
+
 app.listen(PORT, () => {
     if (!process.env.BACKEND_URL) {
         console.warn('Warning: BACKEND_URL is not set in your .env file.');
