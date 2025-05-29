@@ -22,7 +22,9 @@ app.get('/ping', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    res.render('index', {results: null})
+    const fastProxiesPath = path.join(__dirname, 'public', 'fast_proxies.txt');
+    const fastProxiesExists = fs.existsSync(fastProxiesPath);
+    res.render('index', {results: null, fastProxiesExists})
 })
 
 app.post('/check', upload.single('proxyFile'), async(req, res) => {
@@ -44,7 +46,9 @@ app.post('/check', upload.single('proxyFile'), async(req, res) => {
     }
 
     if (errorMsg) {
-        return res.render('index', { results: null, error: errorMsg });
+        const fastProxiesPath = path.join(__dirname, 'public', 'fast_proxies.txt');
+        const fastProxiesExists = fs.existsSync(fastProxiesPath);
+        return res.render('index', { results: null, error: errorMsg, fastProxiesExists });
     }
 
     const results = []
@@ -61,8 +65,8 @@ app.post('/check', upload.single('proxyFile'), async(req, res) => {
     // Save fast proxies
   const filePath = path.join(__dirname, 'public', 'fast_proxies.txt');
   fs.writeFileSync(filePath, fastProxies.join('\n'), 'utf-8');
-
-  res.render('index', { results, error: null });
+  const fastProxiesExists = fastProxies.length > 0;
+  res.render('index', { results, error: null, fastProxiesExists });
 })
 
 app.post('/clear-fast-proxies', (req, res) => {
